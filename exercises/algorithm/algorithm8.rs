@@ -2,7 +2,7 @@
 	queue
 	This question requires you to use queues to implement the functionality of the stac
 */
-// 
+//
 
 #[derive(Debug)]
 pub struct Queue<T> {
@@ -52,12 +52,12 @@ impl<T> Default for Queue<T> {
     }
 }
 
-pub struct myStack<T>
+pub struct MyStack<T>
 {
 	q1:Queue<T>,
 	q2:Queue<T>
 }
-impl<T> myStack<T> {
+impl<T> MyStack<T> {
     pub fn new() -> Self {
         Self {
 			q1:Queue::<T>::new(),
@@ -65,33 +65,30 @@ impl<T> myStack<T> {
         }
     }
     pub fn push(&mut self, elem: T) {
-        if !self.q1.is_empty() {
-            self.q1.enqueue(elem);
-        } else {
-            self.q2.enqueue(elem);
-        }
+        self.q1.enqueue(elem); // 直接插入主队列
     }
     pub fn pop(&mut self) -> Result<T, &str> {
-		// 找到非空的队列
-        let (non_empty, empty) = if !self.q1.is_empty() {
-            (&mut self.q1, &mut self.q2)
-        } else if !self.q2.is_empty() {
-            (&mut self.q2, &mut self.q1)
-        } else {
+		if self.q1.is_empty() {
             return Err("Stack is empty");
-        };
-
-        while non_empty.size() > 1 {
-            if let Ok(value) = non_empty.dequeue() {
-                empty.enqueue(value);
+        }
+    
+        // 不需要创建局部引用，直接操作 self 的字段
+        while self.q1.size() > 1 {
+            if let Ok(val) = self.q1.dequeue() {
+                self.q2.enqueue(val);
             }
         }
-
-        // 返回最后一个元素
-        non_empty.dequeue()
+    
+        // 获取最终结果
+        let result = self.q1.dequeue().unwrap();
+        
+        // 交换队列（直接操作 self 的字段）
+        std::mem::swap(&mut self.q1, &mut self.q2);
+    
+        Ok(result)
     }
     pub fn is_empty(&self) -> bool {
-		self.q1.is_empty() && self.q2.is_empty()
+		self.q1.is_empty() // 只需检查主队列
     }
 }
 
@@ -101,7 +98,7 @@ mod tests {
 	
 	#[test]
 	fn test_queue(){
-		let mut s = myStack::<i32>::new();
+		let mut s = MyStack::<i32>::new();
 		assert_eq!(s.pop(), Err("Stack is empty"));
         s.push(1);
         s.push(2);
